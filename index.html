@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
-     
+
     <title>Đăng nhập - English</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,6 +23,7 @@
             background-size: cover;
             background-position: center;
         }
+
         .login-overlay {
             background-color: rgba(0, 0, 0, 0.6);
             position: absolute;
@@ -30,8 +32,17 @@
             right: 0;
             bottom: 0;
         }
+
+        .google-signin-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.5rem;
+        }
     </style>
 </head>
+
 <body>
     <div class="login-container">
         <div class="login-overlay"></div>
@@ -39,7 +50,7 @@
             <div class="card-body">
                 <h2 class="card-title text-3xl font-bold text-center mb-4">English Learning</h2>
                 <p class="text-center mb-4">Đăng nhập để bắt đầu học tiếng Anh</p>
-                <div id="googleSignIn"></div>
+                <div id="googleSignIn" class="google-signin-container"></div>
                 <img class="w-full" src="/static/login_avatar.png">
             </div>
         </div>
@@ -62,37 +73,38 @@
             });
             google.accounts.id.renderButton(
                 document.getElementById("googleSignIn"),
-                { theme: "outline", size: "large" }  // customization attributes
+                { theme: "outline", size: "large", width: 280 }  // Thêm width để nút rộng hơn
             );
         }
 
         function handleCredentialResponse(response) {
-          console.log("Encoded JWT ID token: " + response.credential);
-          // fetch the token from the server
-          fetch(`${CONFIG.SERVER_DOMAIN}/auth/google`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ token: response.credential }),
-          }).then(response => response.json())
-            .then(data => {
-              console.log(data);
-              // Store user data in localStorage
-              localStorage.setItem('userData', JSON.stringify({
-                token: data.token,
-                userInfo: data,
-                timestamp: new Date().getTime()
-              }));
-              
-              // Redirect to giao-tiep.html after successful login
-              window.location.href = 'giao-tiep.html';
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              alert('Đăng nhập thất bại. Vui lòng thử lại.');
-            });
+            console.log("Encoded JWT ID token: " + response.credential);
+            // fetch the token from the server
+            fetch(`${CONFIG.SERVER_DOMAIN}/auth/google`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ token: response.credential }),
+            }).then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    // Store user data in localStorage
+                    localStorage.setItem('userData', JSON.stringify({
+                        token: data.token,
+                        userInfo: data,
+                        timestamp: new Date().getTime()
+                    }));
+
+                    // Redirect to giao-tiep.html after successful login
+                    window.location.href = 'giao-tiep.html';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đăng nhập thất bại. Vui lòng thử lại.');
+                });
         }
     </script>
 </body>
-</html> 
+
+</html>

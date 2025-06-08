@@ -40,6 +40,13 @@
             margin: 0rem 0;
             padding: 0.5rem;
         }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
     </style>
 </head>
 
@@ -48,7 +55,7 @@
         <div class="login-overlay"></div>
         <div class="card w-96 bg-base-100 shadow-xl relative z-10">
             <div class="card-body">
-                <h2 class="card-title text-3xl font-bold text-center mb-4">English Learning</h2>
+                <h2 class="text-3xl font-bold text-center mb-4">English Learning</h2>
                 <p class="text-center mb-4">Đăng nhập để bắt đầu học tiếng Anh</p>
                 <div id="googleSignIn" class="google-signin-container"></div>
                 <img class="w-full" src="/static/login_avatar.png">

@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light" class="h-screen">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
+     
+    <title>Giao Tiếp Tiếng Anh - English</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Global Configuration -->
+    <script src="config.js"></script>
+    <style>
+        
+        body {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            height: calc(100vh - 400px);
+            overflow-y: auto;
+            padding-bottom: 1rem;
+            padding-right: 20px;
+            padding-left: 20px;
+        }
+
+        .session-list {
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .session-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .session-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .session-item.active {
+            background-color: #e5e7eb;
+        }
+
+        .session-item .time {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .session-item .preview {
+            font-size: 0.875rem;
+            color: #374151;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-item .delete-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: #ef4444;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+        }
+
+        .session-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .session-item .delete-btn:hover {
+            background-color: #fee2e2;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .recording {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .card-body {
+            padding-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-container {
+            margin-top: auto;
+        }
+
+        .chat-bubble {
+            cursor: pointer;
+        }
+
+        .chat-bubble span {
+            display: inline-block;
+            padding: 2px 3px;
+            transition: text-decoration 0.2s;
+            cursor: pointer;
+        }
+
+        .chat-bubble span:hover {
+            text-decoration: underline;
+        }
+
+        .chat-bubble span.clicked {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .translation-tooltip {
+            position: fixed;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            max-width: 300px;
+        }
+
+        .translation-tooltip .original {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .translation-tooltip .translated {
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .translation-tooltip .ipa {
+            color: #4b5563;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .speaker-icon {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .speaker-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .speaker-icon.playing {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col">
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50 flex justify-between">
+        <div class="">
+            <a href="index.html" class="btn btn-ghost text-xl">English Learning</a>
+        </div>
+
+        <div class="gap-2">
+            <div class="">
+                <ul class="menu menu-horizontal px-1 mx-auto flex gap-4">
+                    <li><a href="giao-tiep.html" class="active">Giao Tiếp</a></li>
+                    <li><a href="tu-vung.html">Từ Vựng</a></li>
+                </ul>
+            </div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        <img id="userAvatar" alt="User Avatar" />
+                    </div>
+                </div>
+                <ul tabindex="0"
+                    class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+                    <li><a id="logoutButton">Đăng xuất</a></li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="flex-1 container mx-auto px-4 py-4 flex gap-4">
+        <!-- Session History -->
+        <div class="w-64 bg-base-100 shadow-xl rounded-lg">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="font-semibold">Lịch sử hội thoại</h3>
+                <button id="newSessionButton" class="btn btn-circle btn-sm btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
+            <div class="session-list" id="sessionList">
+                <!-- Sessions will be added here dynamically -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-content">
+            <div class="card bg-base-100 shadow-xl h-full">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Luyện Giao Tiếp Tiếng Anh</h2>
+
+                    <!-- Chat Messages -->
+                    <div class="chat-container">
+                        <div class="chat chat-start">
+
+                        </div>
+                    </div>
+
+                    <!-- Input and Send Button -->
+                    <div id="inputContainer" class="hidden input-container">
+                        <div class="flex gap-2">
+                            <input type="text" id="messageInput" class="input input-bordered flex-1"
+                                placeholder="Chỉnh sửa văn bản của bạn...">
+                            <button id="sendButton" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recording Button -->
+                    <div class="flex justify-center items-center mt-4">
+                        <button id="recordButton" class="btn btn-circle btn-lg btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translate Button -->
+    <div id="translateButton" class="translate-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+        </svg>
+        Dịch
+    </div>
+
+    <script>
+        // Add this at the beginning of the script section
+        // Check login status and load user data
+        document.addEventListener('DOMContentLoaded', () => {
+            const userData = localStorage.getItem('userData');
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const userDataObj = JSON.parse(userData);
+            const userAvatar = document.getElementById('userAvatar');
+            if (userDataObj.userInfo && userDataObj.userInfo.user && userDataObj.userInfo.user.picture) {
+                userAvatar.src = userDataObj.userInfo.user.picture;
+            }
+
+            // Add logout functionality
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.removeItem('userData');
+                localStorage.removeItem('currentSessionId');
+                window.location.href = 'index.html';
+            });
+
+            // Add delete messages functionality
+            const deleteMessagesBtn = document.getElementById('deleteMessages');
+            if (deleteMessagesBtn) {
+                deleteMessagesBtn.addEventListener('click', async () => {
+                    try {
+                        const userData = localStorage.getItem('userData');
+                        if (!userData) {
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                        const userDataObj = JSON.parse(userData);
+                        const token = userDataObj.token;
+
+                        const response = await fetch(`${CONFIG.SERVER_DOMAIN}/messages`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            // Reload the page to show empty chat
+                            window.location.reload();
+                        } else {
+                            throw new Error('Failed to delete messages');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting messages:', error);
+                        statusMessage.textContent = 'Có lỗi xảy ra khi xóa hội thoại. Vui lòng thử lại.';
+                    }
+                });
+            }
+        });
+
+        let mediaRecorder;
+        let audioChunks = [];
+        const recordButton = document.getElementById('recordButton');
+        const statusMessage = document.getElementById('statusMessage');
+        const chatContainer = document.querySelector('.chat-container');
+        const inputContainer = document.getElementById('inputContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        let isRecording = false;
+        let currentTranscribedText = '';
+        let autoSendTimer = null;
+        let hasUserInteracted = false;
+
+        let currentAudio = null;
+
+        // Add these variables at the beginning of the script
+        let currentSessionId = null;
+        const sessionList = document.getElementById('sessionList');
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to add session to the list
+        function addSessionToList(session) {
+            const sessionDiv = document.createElement('div');
+            sessionDiv.className = `session-item ${session.id === currentSessionId ? 'active' : ''}`;
+            sessionDiv.dataset.sessionId = session.id;
+
+            sessionDiv.innerHTML = `
+                <div class="time">${formatDate(session.created_at)}</div>
+                <div class="preview">${session.title || 'Chưa có tiêu đề'}</div>
+                <button class="delete-btn" title="Xóa hội thoại">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            `;
+
+            // Add click event for session selection
+            sessionDiv.addEventListener('click', (e) => {
+                // Don't trigger session load if clicking delete button
+                if (!e.target.closest('.delete-btn')) {
+                    loadSession(session.id);
+                }
+            });
+
+            // Add click event for delete button
+            const deleteBtn = sessionDiv.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // Prevent session selection
+                if (confirm('Bạn có chắc chắn muốn xóa hội thoại này?')) {
+                    await deleteSession(session.id);
+                }
+            });
+
+            sessionList.appendChild(sessionDiv);
+        }
+
+        // Function to load a specific session
+        async function loadSession(sessionId) {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const userDataObj = JSON.parse(userData);
+                const token = userDataObj.token;
+
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/messages/${sessionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load session');
+                }
+
+                const data = await response.json();
+                setCurrentSessionId(sessionId);
+
+                // Update active session in the list
+                document.querySelectorAll('.session-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.sessionId === sessionId);
+                });
+
+                // Clear and reload messages
+                chatContainer.innerHTML = '';
+                data.messages.forEach(message => {
+                    if (message.sender === 'assistant') {
+                        addAIMessage(message.content);
+                    } else {
+                        addUserMessage(message.content);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading session:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi tải hội thoại. Vui lòng thử lại.';
+            }
+        }
+
+        // Hàm xử lý dịch và hiển thị kết quả
+        async function handleTranslation(text, position) {
+            if (!text) return;
+
+            try {
+                // Lấy thông tin phiên âm từ API dictionary
+                const pronunciationResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`);
+                const pronunciationData = await pronunciationResponse.json();
+                let phonetic = '';
+                
+                if (Array.isArray(pronunciationData) && pronunciationData.length > 0) {
+                    phonetic = pronunciationData[0].phonetic || pronunciationData[0].phonetics[0]?.text || '';
+                }
+
+                // Lấy bản dịch
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        direction: 'en_to_vi'
+                    })
+                });
+
+                const data = await response.json();
+
+                // Tạo tooltip hiển thị kết quả dịch
+                const tooltip = document.createElement('div');
+                tooltip.className = 'translation-tooltip';
+                tooltip.innerHTML = `
+                    <div class="original">${text}</div>
+                    <div class="translated">${data.translated_text}</div>
+                    ${phonetic ? `<div class="ipa">${phonetic}</div>` : ''}
+                `;
+                // <div class="ipa">${data.ipa}</div>
+                // Đặt vị trí tooltip
+                tooltip.style.top = `${position.bottom + window.scrollY + 5}px`;
+                tooltip.style.left = `${position.left + window.scrollX}px`;
+
+                document.body.appendChild(tooltip);
+
+            } catch (error) {
+                console.error('Lỗi khi dịch:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi dịch. Vui lòng thử lại.';
+            }
+        }
+
+        // Hàm thêm tin nhắn của AI
+        function addAIMessage(message) {
+            const chatDiv = document.createElement('div');
+            chatDiv.className = 'chat chat-start';
+            const messageWords = message.split(' ');
+            const formattedMessage = messageWords.map(word => `<span>${word}</span>`).join(' ');
+            chatDiv.innerHTML = `
+                <div class="chat-bubble flex-wrap max-w-[500px] flex items-center">
+                    <button class="speaker-icon" title="Phát âm thanh">
+                        <svg class="w-6 h-6 text-gray-800 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.5 8.43A4.985 4.985 0 0 1 17 12a4.984 4.984 0 0 1-1.43 3.5m2.794 2.864A8.972 8.972 0 0 0 21 12a8.972 8.972 0 0 0-2.636-6.364M12 6.135v11.73a1 1 0 0 1-1.64.768L6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l4.36-3.633a1 1 0 0 1 1.64.768Z"/>
+                        </svg>
+                    </button>
+                    ${formattedMessage}
+                </div>
+            `;
+
+            // Thêm sự kiện click cho nút phát âm
+            const speakerButton = chatDiv.querySelector('.speaker-icon');
+            speakerButton.addEventListener('click', () => {
+                speakerButton.classList.toggle('playing');
+                playTextToSpeech(message, speakerButton);
+            });
+
+            // Thêm sự kiện click cho từng từ
+            const wordSpans = chatDiv.querySelectorAll('span');
+            wordSpans.forEach(word => {
+                word.addEventListener('click', (e) => {
+                    // Xóa highlight của các từ khác
+                    document.querySelectorAll('.chat-bubble span.clicked').forEach(w => {
+                        w.classList.remove('clicked');
+                    });
+
+                    // Highlight từ được click
+                    word.classList.add('clicked');
+
+                    // Xử lý dịch
+                    handleTranslation(word.textContent, word.getBoundingClientRect());
+                });
+            });
+
+            chatContainer.appendChild(chatDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Hàm thêm tin nhắn của người dùng
+        function addUserMessage(message) {
+            const chatDiv = document.createElement('div');
+            chatDiv.className = 'chat chat-end';
+            const messageWords = message.split(' ');
+            const formattedMessage = messageWords.map(word => `<span>${word}</span>`).join(' ');
+            chatDiv.innerHTML = `
+                <div class="chat-bubble chat-bubble-primary">${formattedMessage}</div>
+            `;
+
+            // Thêm sự kiện click cho từng từ
+            const wordSpans = chatDiv.querySelectorAll('span');
+            wordSpans.forEach(word => {
+                word.addEventListener('click', (e) => {
+                    // Xóa highlight của các từ khác
+                    document.querySelectorAll('.chat-bubble span.clicked').forEach(w => {
+                        w.classList.remove('clicked');
+                    });
+
+                    // Highlight từ được click
+                    word.classList.add('clicked');
+
+                    // Xử lý dịch
+                    handleTranslation(word.textContent, word.getBoundingClientRect());
+                });
+            });
+
+            chatContainer.appendChild(chatDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Modify the fetchChatHistory function to handle sessions
+        async function fetchChatHistory() {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const userDataObj = JSON.parse(userData);
+                const token = userDataObj.token;
+
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/sessions`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sessions');
+                }
+
+                const sessions = await response.json();
+
+                // Clear session list
+                sessionList.innerHTML = '';
+
+                // Add sessions to the list
+                sessions.forEach(session => {
+                    addSessionToList(session);
+                });
+
+                // Check if we have a current session ID (from page reload)
+                if (currentSessionId) {
+                    // Reload the current session
+                    loadSession(currentSessionId);
+                } else {
+                    // If no sessions at all, show new session screen
+                    chatContainer.innerHTML = '';
+                    addAIMessage("Xin chào! Tôi là trợ lý AI của bạn. Hãy bắt đầu luyện tập giao tiếp tiếng Anh!");
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy lịch sử chat:', error);
+                statusMessage.textContent = 'Không thể tải lịch sử chat. Vui lòng thử lại sau.';
+            }
+        }
+
+        // Add this after the fetchChatHistory function
+        // Save current session ID to localStorage when it changes
+        function setCurrentSessionId(sessionId) {
+            currentSessionId = sessionId;
+            localStorage.setItem('currentSessionId', sessionId);
+        }
+
+        // Yêu cầu quyền truy cập microphone
+        async function setupRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    statusMessage.textContent = 'Đang chuyển đổi âm thanh thành văn bản...';
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = [];
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob);
+
+                        const response = await fetch(`${CONFIG.SERVER_DOMAIN}/speech`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        // Reset user interaction flag
+                        hasUserInteracted = false;
+
+                        // Hiển thị input với văn bản đã chuyển đổi
+                        messageInput.value = data.transcript;
+                        inputContainer.classList.remove('hidden');
+                        messageInput.focus();
+
+                        // Start auto-send timer only if user hasn't interacted
+                        if (!hasUserInteracted) {
+                            startAutoSendTimer();
+                        }
+
+                    } catch (error) {
+                        console.error('Lỗi khi xử lý audio:', error);
+                        statusMessage.textContent = 'Có lỗi xảy ra khi xử lý âm thanh. Vui lòng thử lại.';
+                    }
+                };
+            } catch (error) {
+                console.error('Lỗi khi truy cập microphone:', error);
+                statusMessage.textContent = 'Không thể truy cập microphone. Vui lòng kiểm tra lại quyền truy cập.';
+            }
+        }
+
+        // Modify function to handle auto-send timer
+        function startAutoSendTimer() {
+            // Clear any existing timer
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+            }
+
+            // Set new timer only if user hasn't interacted
+            if (!hasUserInteracted) {
+                autoSendTimer = setTimeout(() => {
+                    const text = messageInput.value.trim();
+                    if (text) {
+                        addUserMessage(text);
+                        sendMessage(text);
+                    }
+                }, 5000); // 5 seconds
+            }
+        }
+
+        // Add input event listener to reset timer and mark user interaction
+        messageInput.addEventListener('input', () => {
+            hasUserInteracted = true; // Mark that user has interacted
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Add click event listener to mark user interaction
+        messageInput.addEventListener('click', () => {
+            hasUserInteracted = true;
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Add keydown event listener to mark user interaction
+        messageInput.addEventListener('keydown', () => {
+            hasUserInteracted = true;
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Modify sendMessage function to clear timer
+        async function sendMessage(text) {
+            // Clear auto-send timer
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const userDataObj = JSON.parse(userData);
+                const token = userDataObj.token;
+
+                statusMessage.textContent = 'Đang xử lý...';
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        session_id: currentSessionId  // Luôn gửi session_id hiện tại
+                    })
+                });
+
+                const data = await response.json();
+
+                // Cập nhật session_id từ response nếu có
+                if (data.session_id) {
+                    currentSessionId = data.session_id;
+                    setCurrentSessionId(currentSessionId);
+                }
+
+                // Add AI response
+                addAIMessage(data.response);
+
+                playTextToSpeech(data.response, null);
+
+                // Refresh session list nhưng không reset currentSessionId
+                await fetchChatHistory();
+
+                // Hide input and clear content
+                inputContainer.classList.add('hidden');
+                messageInput.value = '';
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('Lỗi khi gửi tin nhắn:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.';
+            }
+        }
+
+        // Xử lý sự kiện click nút gửi
+        sendButton.addEventListener('click', () => {
+            const text = messageInput.value.trim();
+            if (text) {
+                addUserMessage(text);
+                sendMessage(text);
+            }
+        });
+
+        // Xử lý sự kiện nhấn Enter trong input
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const text = messageInput.value.trim();
+                if (text) {
+                    addUserMessage(text);
+                    sendMessage(text);
+                }
+            }
+        });
+
+        // Xử lý sự kiện click nút ghi âm
+        recordButton.addEventListener('click', async () => {
+            if (!mediaRecorder) {
+                await setupRecording();
+            }
+
+            if (!isRecording) {
+                // Bắt đầu ghi âm
+                audioChunks = [];
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.classList.add('recording');
+                statusMessage.textContent = 'Đang ghi âm...';
+            } else {
+                // Dừng ghi âm
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.classList.remove('recording');
+
+            }
+        });
+
+        // Xử lý sự kiện chọn text
+        document.addEventListener('mouseup', (e) => {
+            const selection = window.getSelection();
+            selectionText = selection.toString().trim();
+
+            if (selectionText) {
+                selectedText = selectionText.replaceAll("\n", " ");
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                // Xử lý dịch
+                handleTranslation(selectedText, rect);
+            }
+        });
+
+        // Xóa tooltip khi click ra ngoài
+        document.addEventListener('mousedown', (e) => {
+            const tooltip = document.querySelector('.translation-tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+            document.querySelectorAll('.chat-bubble span.clicked').forEach(w => {
+                w.classList.remove('clicked');
+            });
+        });
+
+        // Hàm phát âm thanh
+        async function playTextToSpeech(message, speakerButton) {
+            const userData = localStorage.getItem("userData");
+            if (!userData) {
+                window.location.href = "index.html";
+                return;
+            }
+            const userDataObj = JSON.parse(userData);
+            const token = userDataObj.token;
+            try {
+                // Dừng âm thanh đang phát nếu có
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                statusMessage.textContent = 'Đang chuyển đổi văn bản thành âm thanh...';
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/speak`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        message,
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                const base64Audio = data.audio_base64;
+
+                // Chuyển đổi base64 thành Blob
+                const binaryString = atob(base64Audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const audioBlob = new Blob([bytes], { type: "audio/mp3" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                currentAudio = new Audio(audioUrl);
+
+                // Xóa URL khi audio kết thúc
+                currentAudio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    statusMessage.textContent = '';
+                    if (speakerButton) {
+                        speakerButton.classList.remove('playing');
+                    }
+                };
+
+                currentAudio.play();
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('Lỗi khi phát âm thanh:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi phát âm thanh. Vui lòng thử lại.';
+            }
+        }
+
+        // Tải lịch sử chat khi trang được tải
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved session ID from localStorage
+            const savedSessionId = localStorage.getItem('currentSessionId');
+            if (savedSessionId) {
+                currentSessionId = savedSessionId;
+            }
+            fetchChatHistory();
+        });
+
+        // Add this after the fetchChatHistory function
+        async function createNewSession() {
+            // Clear chat container
+            chatContainer.innerHTML = '';
+
+            // Add welcome message
+            addAIMessage("Xin chào! Tôi là trợ lý AI của bạn. Hãy bắt đầu luyện tập giao tiếp tiếng Anh!");
+
+            // Reset current session ID
+            currentSessionId = null;
+
+            // Remove active state from all sessions
+            document.querySelectorAll('.session-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        // Add event listener for new session button
+        document.getElementById('newSessionButton').addEventListener('click', createNewSession);
+
+        // Add delete session function
+        async function deleteSession(sessionId) {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const userDataObj = JSON.parse(userData);
+                const token = userDataObj.token;
+
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/messages/${sessionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete session');
+                }
+
+                // If deleted session was current session, clear chat
+                if (sessionId === currentSessionId) {
+                    chatContainer.innerHTML = '';
+                    currentSessionId = null;
+                    addAIMessage("Xin chào! Tôi là trợ lý AI của bạn. Hãy bắt đầu luyện tập giao tiếp tiếng Anh!");
+                }
+
+                // Refresh session list
+                fetchChatHistory();
+
+            } catch (error) {
+                console.error('Lỗi khi xóa hội thoại:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi xóa hội thoại. Vui lòng thử lại.';
+            }
+        }
+    </script>
+</body>
+
+</html>

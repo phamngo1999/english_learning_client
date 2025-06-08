@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light" class="h-screen">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
+     
+    <title>Từ Vựng Tiếng Anh - English</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Global Configuration -->
+    <script src="config.js"></script>
+    <style>
+        body {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .translate-container {
+            height: 400px;
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            position: relative;
+            width: 100%;
+            padding: 0 1rem;
+        }
+        
+        .language-switch {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+        
+        .language-switch:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .translate-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-width: 0;
+        }
+        
+        .textarea {
+            height: 50% !important;
+            resize: none;
+            width: 100%;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col">
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50 flex justify-between">
+        <div class="">
+            <a href="index.html" class="btn btn-ghost text-xl">English Learning</a>
+        </div>
+
+        <div class="gap-2">
+            <div class="">
+                <ul class="menu menu-horizontal px-1 mx-auto flex gap-4">
+                    <li><a href="giao-tiep.html">Giao Tiếp</a></li>
+                    <li><a href="tu-vung.html" class="active">Từ Vựng</a></li>
+                </ul>
+            </div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        <img id="userAvatar" alt="User Avatar" />
+                    </div>
+                </div>
+                <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+                    <li><a id="logoutButton">Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex-1 container mx-auto px-4 py-4">
+        <div class="card bg-base-100 shadow-xl h-full">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Từ Vựng Tiếng Anh</h2>
+
+                <!-- Translate Container -->
+                <div class="translate-container">
+                    <!-- Source Language -->
+                    <div class="translate-box">
+                        <div class="flex justify-between items-center mb-2">
+                            <div id="sourceLabel" class="text-sm font-medium text-gray-500">Tiếng Việt</div>
+                            <button id="speakSourceBtn" class="btn btn-ghost btn-md" title="Phát âm">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+                                  <path d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <textarea id="sourceText" class="textarea textarea-bordered" placeholder="Nhập văn bản cần dịch..."></textarea>
+                    </div>
+
+                    <!-- Switch Language Button -->
+                    <button id="switchLanguage" class="btn btn-circle btn-sm btn-ghost language-switch">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </button>
+
+                    <!-- Target Language -->
+                    <div class="translate-box">
+                        <div class="flex justify-between items-center mb-2">
+                            <div id="targetLabel" class="text-sm font-medium text-gray-500">Tiếng Anh</div>
+                            <button id="speakTargetBtn" class="btn btn-ghost btn-md" title="Phát âm">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+                                  <path d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="targetText" class="textarea textarea-bordered bg-base-200"></div>
+                        <div id="pronunciation" class="mt-2 text-sm text-blue-700 italic pl-2"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4 mt-4">
+                    <button id="translateButton" class="btn btn-primary">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg> -->
+                        Dịch
+                    </button>
+                    <button id="clearButton" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Xóa
+                    </button>
+                </div>
+
+                <!-- Status Message -->
+                <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add this at the beginning of the script section
+        // Check login status and load user data
+        document.addEventListener('DOMContentLoaded', () => {
+            const userData = localStorage.getItem('userData');
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const userDataObj = JSON.parse(userData);
+            const userAvatar = document.getElementById('userAvatar');
+            if (userDataObj.userInfo && userDataObj.userInfo.user && userDataObj.userInfo.user.picture) {
+                userAvatar.src = userDataObj.userInfo.user.picture;
+            }
+
+            // Add logout functionality
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.removeItem('userData');
+                window.location.href = 'index.html';
+            });
+        });
+
+        const sourceText = document.getElementById('sourceText');
+        const targetText = document.getElementById('targetText');
+        const translateButton = document.getElementById('translateButton');
+        const clearButton = document.getElementById('clearButton');
+        const switchLanguage = document.getElementById('switchLanguage');
+        const statusMessage = document.getElementById('statusMessage');
+        let isEnglishToVietnamese = false;
+
+        // Xử lý chuyển đổi ngôn ngữ
+        switchLanguage.addEventListener('click', () => {
+            isEnglishToVietnamese = !isEnglishToVietnamese;
+            const sourceLabel = document.getElementById('sourceLabel');
+            sourceLabel.textContent = isEnglishToVietnamese ? 'Tiếng Anh' : 'Tiếng Việt';
+            const targetLabel = document.getElementById('targetLabel');
+            targetLabel.textContent = isEnglishToVietnamese ? 'Tiếng Việt' : 'Tiếng Anh';
+
+            // Hoán đổi nội dung
+            const tempSourceText = sourceText.value;
+            const tempTargetText = targetText.value;
+            sourceText.textContent = tempTargetText;
+            sourceText.value = tempTargetText;
+            targetText.textContent = tempSourceText;
+            targetText.value = tempSourceText;
+
+            // Xóa phiên âm khi chuyển đổi
+            document.getElementById('pronunciation').innerHTML = '';
+
+            // Nếu có nội dung trong ô nguồn, tự động dịch
+            if (sourceText.value.trim()) {
+                translateButton.click();
+            }
+        });
+
+        // Xử lý dịch
+        translateButton.addEventListener('click', async() => {
+            const text = sourceText.value.trim();
+            if (!text) {
+                statusMessage.textContent = 'Vui lòng nhập văn bản cần dịch';
+                return;
+            }
+
+            try {
+                statusMessage.textContent = 'Đang dịch...';
+                const response = await fetch('http://localhost:8080/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        direction: isEnglishToVietnamese ? 'en_to_vi' : 'vi_to_en'
+                    })
+                });
+
+                const data = await response.json();
+                const translatedText = data.translated_text;
+
+                // Hiển thị kết quả dịch với nút phát âm
+                if (isEnglishToVietnamese) {
+                    targetText.innerHTML = translatedText;
+                    // Lấy phiên âm cho phần tiếng Anh (sourceText.value)
+                    const words = sourceText.value.trim().split(' ');
+                    const pronunciationPromises = words.map(async(word) => {
+                        try {
+                            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                            const data = await response.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                const phonetic = data[0].phonetic || data[0].phonetics[0]?.text || '';
+                                return phonetic ? `<span class=\"mr-4\">${word}: <span class='font-semibold'>${phonetic}</span></span>` : '';
+                            }
+                            return '';
+                        } catch (error) {
+                            console.error(`Error fetching pronunciation for ${word}:`, error);
+                            return '';
+                        }
+                    });
+                    const pronunciations = await Promise.all(pronunciationPromises);
+                    const filtered = pronunciations.filter(p => p).join(' ');
+                    document.getElementById('pronunciation').innerHTML = `<span class='font-bold'>Phiên âm:</span> ${filtered || "<span class='italic text-gray-400'>Không có phiên âm</span>"}`;
+                } else {
+                    // Tạo HTML với nút phát âm cho mỗi từ
+                    const words = translatedText.split(' ');
+                    const htmlContent = words.map(word => {
+                        return `<span class=\"inline-flex items-center mr-2\">${word}</span>`;
+                    }).join(' ');
+                    targetText.innerHTML = htmlContent;
+
+                    // Lấy phiên âm cho mỗi từ
+                    const pronunciationPromises = words.map(async(word) => {
+                        try {
+                            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                            const data = await response.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                const phonetic = data[0].phonetic || data[0].phonetics[0]?.text || '';
+                                return phonetic ? `<span class=\"mr-4\">${word}: <span class='font-semibold'>${phonetic}</span></span>` : '';
+                            }
+                            return '';
+                        } catch (error) {
+                            console.error(`Error fetching pronunciation for ${word}:`, error);
+                            return '';
+                        }
+                    });
+
+                    const pronunciations = await Promise.all(pronunciationPromises);
+                    const filtered = pronunciations.filter(p => p).join(' ');
+                    document.getElementById('pronunciation').innerHTML = `<span class='font-bold'>Phiên âm:</span> ${filtered || "<span class='italic text-gray-400'>Không có phiên âm</span>"}`;
+                }
+
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('Lỗi khi dịch:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi dịch. Vui lòng thử lại.';
+            }
+        });
+
+        // Hàm phát âm từ
+        function speakWord(word) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        // Hàm phát âm toàn bộ nội dung box
+        document.getElementById('speakSourceBtn').addEventListener('click', () => {
+            const text = sourceText.value;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = isEnglishToVietnamese ? 'en-US' : 'vi-VN';
+            speechSynthesis.speak(utterance);
+        });
+        document.getElementById('speakTargetBtn').addEventListener('click', () => {
+            let text = '';
+            if (isEnglishToVietnamese) {
+                text = targetText.innerText;
+            } else {
+                // Lấy text thuần từ HTML (bỏ nút loa nhỏ)
+                text = targetText.innerText;
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = isEnglishToVietnamese ? 'vi-VN' : 'en-US';
+            speechSynthesis.speak(utterance);
+        });
+
+        // Xử lý xóa
+        clearButton.addEventListener('click', () => {
+            sourceText.value = '';
+            targetText.value = '';
+            statusMessage.textContent = '';
+        });
+    </script>
+</body>
+
+</html>

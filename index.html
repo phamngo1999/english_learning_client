@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
+     
+    <title>Đăng nhập - English</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+    <!-- Global Configuration -->
+    <script src="config.js"></script>
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('/static/login_background.svg');
+            background-size: cover;
+            background-position: center;
+        }
+        .login-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-overlay"></div>
+        <div class="card w-96 bg-base-100 shadow-xl relative z-10">
+            <div class="card-body">
+                <h2 class="card-title text-3xl font-bold text-center mb-4">English Learning</h2>
+                <p class="text-center mb-4">Đăng nhập để bắt đầu học tiếng Anh</p>
+                <div id="googleSignIn"></div>
+                <img class="w-full" src="/static/login_avatar.png">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check for existing login data when page loads
+        window.onload = function () {
+            // Check if user is already logged in
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                window.location.href = 'giao-tiep.html';
+                return;
+            }
+
+            // Initialize Google Sign In if not logged in
+            google.accounts.id.initialize({
+                client_id: "554162684946-37e0v780lkvpn3nnctcupkipqirsceaq.apps.googleusercontent.com",
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("googleSignIn"),
+                { theme: "outline", size: "large" }  // customization attributes
+            );
+        }
+
+        function handleCredentialResponse(response) {
+          console.log("Encoded JWT ID token: " + response.credential);
+          // fetch the token from the server
+          fetch(`${CONFIG.SERVER_DOMAIN}/auth/google`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ token: response.credential }),
+          }).then(response => response.json())
+            .then(data => {
+              console.log(data);
+              // Store user data in localStorage
+              localStorage.setItem('userData', JSON.stringify({
+                token: data.token,
+                userInfo: data,
+                timestamp: new Date().getTime()
+              }));
+              
+              // Redirect to giao-tiep.html after successful login
+              window.location.href = 'giao-tiep.html';
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('Đăng nhập thất bại. Vui lòng thử lại.');
+            });
+        }
+    </script>
+</body>
+</html> 

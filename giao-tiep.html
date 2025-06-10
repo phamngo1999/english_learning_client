@@ -846,7 +846,7 @@
             const selection = window.getSelection();
             selectionText = selection.toString().trim();
 
-            if (selectionText) {
+            if (selectionText && selection.anchorNode.parentNode.parentNode.classList.contains('chat-bubble')) {
                 selectedText = selectionText.replaceAll("\n", " ");
                 const range = selection.getRangeAt(0);
                 const rect = range.getBoundingClientRect();

@@ -339,6 +339,10 @@
 
         let mediaRecorder;
         let audioChunks = [];
+        let recordingTimeout;
+        const MAX_RECORDING_TIME = 60000; // 60 seconds
+        const MIN_AUDIO_SIZE = 1024; // 1KB
+        const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
         const recordButton = document.getElementById('recordButton');
         const statusMessage = document.getElementById('statusMessage');
         const chatContainer = document.querySelector('.chat-container');
@@ -695,19 +699,52 @@
         // Yêu cầu quyền truy cập microphone
         async function setupRecording() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Xử lý khi stream bị ngắt
+                stream.getAudioTracks().forEach(track => {
+                    track.onended = () => {
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                        statusMessage.textContent = 'Microphone đã bị ngắt kết nối. Vui lòng thử lại.';
+                    };
+                });
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
 
                 mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
                 };
 
                 mediaRecorder.onstop = async () => {
-                    statusMessage.textContent = 'Đang chuyển đổi âm thanh thành văn bản...';
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    audioChunks = [];
-
                     try {
+                        if (audioChunks.length === 0) {
+                            throw new Error('Không có dữ liệu âm thanh');
+                        }
+
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                        // Kiểm tra kích thước audio
+                        if (audioBlob.size < MIN_AUDIO_SIZE) {
+                            throw new Error('Âm thanh quá ngắn');
+                        }
+                        if (audioBlob.size > MAX_AUDIO_SIZE) {
+                            throw new Error('Âm thanh quá dài');
+                        }
+
+                        statusMessage.textContent = 'Đang chuyển đổi âm thanh thành văn bản...';
+
                         const formData = new FormData();
                         formData.append('audio', audioBlob);
 
@@ -715,6 +752,10 @@
                             method: 'POST',
                             body: formData
                         });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
 
                         const data = await response.json();
 
@@ -733,156 +774,70 @@
 
                     } catch (error) {
                         console.error('Lỗi khi xử lý audio:', error);
-                        statusMessage.textContent = 'Có lỗi xảy ra khi xử lý âm thanh. Vui lòng thử lại.';
+                        statusMessage.textContent = error.message || 'Có lỗi xảy ra khi xử lý âm thanh. Vui lòng thử lại.';
+                    } finally {
+                        audioChunks = [];
                     }
                 };
+
+                return true;
             } catch (error) {
                 console.error('Lỗi khi truy cập microphone:', error);
-                statusMessage.textContent = 'Không thể truy cập microphone. Vui lòng kiểm tra lại quyền truy cập.';
+                if (error.name === 'NotAllowedError') {
+                    statusMessage.textContent = 'Vui lòng cho phép truy cập microphone để sử dụng tính năng này.';
+                } else if (error.name === 'NotFoundError') {
+                    statusMessage.textContent = 'Không tìm thấy microphone. Vui lòng kiểm tra thiết bị của bạn.';
+                } else {
+                    statusMessage.textContent = 'Không thể truy cập microphone. Vui lòng kiểm tra lại quyền truy cập.';
+                }
+                return false;
             }
         }
 
-        // Modify function to handle auto-send timer
-        function startAutoSendTimer() {
-            // Clear any existing timer
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-            }
-
-            // Set new timer only if user hasn't interacted
-            if (!hasUserInteracted) {
-                autoSendTimer = setTimeout(() => {
-                    const text = messageInput.value.trim();
-                    if (text) {
-                        addUserMessage(text);
-                        sendMessage(text);
-                    }
-                }, 5000); // 5 seconds
-            }
-        }
-
-        // Add input event listener to reset timer and mark user interaction
-        messageInput.addEventListener('input', () => {
-            hasUserInteracted = true; // Mark that user has interacted
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-                autoSendTimer = null;
-            }
-        });
-
-        // Add click event listener to mark user interaction
-        messageInput.addEventListener('click', () => {
-            hasUserInteracted = true;
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-                autoSendTimer = null;
-            }
-        });
-
-        // Add keydown event listener to mark user interaction
-        messageInput.addEventListener('keydown', () => {
-            hasUserInteracted = true;
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-                autoSendTimer = null;
-            }
-        });
-
-        // Modify sendMessage function to clear timer
-        async function sendMessage(text) {
-            // Clear auto-send timer
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-                autoSendTimer = null;
-            }
-
-            try {
-                const userData = localStorage.getItem('userData');
-                if (!userData) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                const userDataObj = JSON.parse(userData);
-                const token = userDataObj.token;
-
-                statusMessage.textContent = 'Đang xử lý...';
-                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        message: text,
-                        session_id: currentSessionId  // Luôn gửi session_id hiện tại
-                    })
-                });
-
-                const data = await response.json();
-
-                // Cập nhật session_id từ response nếu có
-                if (data.session_id) {
-                    currentSessionId = data.session_id;
-                    setCurrentSessionId(currentSessionId);
-                }
-
-                // Add AI response
-                addAIMessage(data.response);
-
-                playTextToSpeech(data.response, null);
-
-                // Refresh session list nhưng không reset currentSessionId
-                await fetchChatHistory();
-
-                // Hide input and clear content
-                inputContainer.classList.add('hidden');
-                messageInput.value = '';
-                statusMessage.textContent = '';
-            } catch (error) {
-                console.error('Lỗi khi gửi tin nhắn:', error);
-                statusMessage.textContent = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.';
-            }
-        }
-
-        // Xử lý sự kiện click nút gửi
-        sendButton.addEventListener('click', () => {
-            const text = messageInput.value.trim();
-            if (text) {
-                addUserMessage(text);
-                sendMessage(text);
-            }
-        });
-
-        // Xử lý sự kiện nhấn Enter trong input
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const text = messageInput.value.trim();
-                if (text) {
-                    addUserMessage(text);
-                    sendMessage(text);
-                }
-            }
-        });
-
-        // Xử lý sự kiện click nút ghi âm
-        recordButton.addEventListener('click', async () => {
-            if (!mediaRecorder) {
-                await setupRecording();
-            }
-
-            if (!isRecording) {
-                // Bắt đầu ghi âm
-                audioChunks = [];
-                mediaRecorder.start();
-                isRecording = true;
-                recordButton.classList.add('recording');
-                statusMessage.textContent = 'Đang ghi âm...';
-            } else {
-                // Dừng ghi âm
+        // Hàm dừng ghi âm
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
                 mediaRecorder.stop();
                 isRecording = false;
                 recordButton.classList.remove('recording');
+                if (recordingTimeout) {
+                    clearTimeout(recordingTimeout);
+                    recordingTimeout = null;
+                }
+            }
+        }
 
+        // Xử lý sự kiện click nút ghi âm
+        recordButton.addEventListener('click', async () => {
+            try {
+                if (!mediaRecorder) {
+                    const success = await setupRecording();
+                    if (!success) return;
+                }
+
+                if (!isRecording) {
+                    // Bắt đầu ghi âm
+                    audioChunks = [];
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordButton.classList.add('recording');
+                    statusMessage.textContent = 'Đang ghi âm...';
+
+                    // Tự động dừng sau MAX_RECORDING_TIME
+                    recordingTimeout = setTimeout(() => {
+                        if (isRecording) {
+                            stopRecording();
+                            statusMessage.textContent = 'Đã đạt thời gian ghi âm tối đa.';
+                        }
+                    }, MAX_RECORDING_TIME);
+                } else {
+                    stopRecording();
+                }
+            } catch (error) {
+                console.error('Lỗi khi ghi âm:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi ghi âm. Vui lòng thử lại.';
+                isRecording = false;
+                recordButton.classList.remove('recording');
             }
         });
 
@@ -1043,6 +998,128 @@
                 statusMessage.textContent = 'Có lỗi xảy ra khi xóa hội thoại. Vui lòng thử lại.';
             }
         }
+
+        // Modify function to handle auto-send timer
+        function startAutoSendTimer() {
+            // Clear any existing timer
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+            }
+
+            // Set new timer only if user hasn't interacted
+            if (!hasUserInteracted) {
+                autoSendTimer = setTimeout(() => {
+                    const text = messageInput.value.trim();
+                    if (text) {
+                        addUserMessage(text);
+                        sendMessage(text);
+                    }
+                }, 5000); // 5 seconds
+            }
+        }
+
+        // Add input event listener to reset timer and mark user interaction
+        messageInput.addEventListener('input', () => {
+            hasUserInteracted = true; // Mark that user has interacted
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Add click event listener to mark user interaction
+        messageInput.addEventListener('click', () => {
+            hasUserInteracted = true;
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Add keydown event listener to mark user interaction
+        messageInput.addEventListener('keydown', () => {
+            hasUserInteracted = true;
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+        });
+
+        // Modify sendMessage function to clear timer
+        async function sendMessage(text) {
+            // Clear auto-send timer
+            if (autoSendTimer) {
+                clearTimeout(autoSendTimer);
+                autoSendTimer = null;
+            }
+
+            try {
+                const userData = localStorage.getItem('userData');
+                if (!userData) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const userDataObj = JSON.parse(userData);
+                const token = userDataObj.token;
+
+                statusMessage.textContent = 'Đang xử lý...';
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        session_id: currentSessionId  // Luôn gửi session_id hiện tại
+                    })
+                });
+
+                const data = await response.json();
+
+                // Cập nhật session_id từ response nếu có
+                if (data.session_id) {
+                    currentSessionId = data.session_id;
+                    setCurrentSessionId(currentSessionId);
+                }
+
+                // Add AI response
+                addAIMessage(data.response);
+
+                playTextToSpeech(data.response, null);
+
+                // Refresh session list nhưng không reset currentSessionId
+                await fetchChatHistory();
+
+                // Hide input and clear content
+                inputContainer.classList.add('hidden');
+                messageInput.value = '';
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('Lỗi khi gửi tin nhắn:', error);
+                statusMessage.textContent = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.';
+            }
+        }
+
+        // Xử lý sự kiện click nút gửi
+        sendButton.addEventListener('click', () => {
+            const text = messageInput.value.trim();
+            if (text) {
+                addUserMessage(text);
+                sendMessage(text);
+            }
+        });
+
+        // Xử lý sự kiện nhấn Enter trong input
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const text = messageInput.value.trim();
+                if (text) {
+                    addUserMessage(text);
+                    sendMessage(text);
+                }
+            }
+        });
     </script>
 </body>
 

@@ -111,7 +111,7 @@
         }
 
         .input-container {
-            margin-top: auto;
+            /* margin-top: auto; */
         }
 
         .chat-bubble {
@@ -741,7 +741,9 @@
                 }
                 const userDataObj = JSON.parse(userData);
                 const token = userDataObj.token;
-
+                // Hide input and clear content
+                inputContainer.classList.add('hidden');
+                messageInput.value = '';
                 statusMessage.textContent = 'Đang xử lý...';
                 const response = await fetch(`${CONFIG.SERVER_DOMAIN}/chat`, {
                     method: 'POST',
@@ -771,9 +773,7 @@
                 // Refresh session list nhưng không reset currentSessionId
                 await fetchChatHistory();
 
-                // Hide input and clear content
-                inputContainer.classList.add('hidden');
-                messageInput.value = '';
+                
                 statusMessage.textContent = '';
             } catch (error) {
                 console.error('Lỗi khi gửi tin nhắn:', error);

@@ -476,22 +476,21 @@
 
             try {
                 // Lấy thông tin phiên âm từ API dictionary với timeout
-                const pronunciationPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`, {
-                    signal: AbortSignal.timeout(5000) // 5 giây timeout
-                });
-
-                let phonetic = '';
-                try {
-                    const pronunciationResponse = await pronunciationPromise;
-                    if (pronunciationResponse.ok) {
-                        const pronunciationData = await pronunciationResponse.json();
-                        if (Array.isArray(pronunciationData) && pronunciationData.length > 0) {
-                            phonetic = pronunciationData[0].phonetic || pronunciationData[0].phonetics[0]?.text || '';
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Không thể lấy phiên âm:', error);
-                }
+                // const pronunciationPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${text}`, {
+                //     signal: AbortSignal.timeout(5000) // 5 giây timeout
+                // });
+                // let phonetic = '';
+                // try {
+                //     const pronunciationResponse = await pronunciationPromise;
+                //     if (pronunciationResponse.ok) {
+                //         const pronunciationData = await pronunciationResponse.json();
+                //         if (Array.isArray(pronunciationData) && pronunciationData.length > 0) {
+                //             phonetic = pronunciationData[0].phonetic || pronunciationData[0].phonetics[0]?.text || '';
+                //         }
+                //     }
+                // } catch (error) {
+                //     console.warn('Không thể lấy phiên âm:', error);
+                // }
 
                 // Lấy bản dịch với retry
                 let translatedText = '';
@@ -518,6 +517,7 @@
 
                         const data = await response.json();
                         translatedText = data.translated_text;
+                        ipa = data.ipa || '';
                         break;
                     } catch (error) {
                         retryCount++;
@@ -532,7 +532,7 @@
                 tooltip.innerHTML = `
                     <div class="original">${text}</div>
                     <div class="translated">${translatedText}</div>
-                    ${phonetic ? `<div class="ipa">${phonetic}</div>` : ''}
+                    ${ipa ? `<div class="ipa">${ipa}</div>` : ''}
                 `;
 
                 // Kiểm tra và điều chỉnh vị trí tooltip nếu cần

@@ -170,6 +170,83 @@
         .speaker-icon.playing {
             animation: pulse 1s infinite;
         }
+
+        /* Add styles for vocabulary sidebar */
+        .vocabulary-sidebar {
+            position: fixed;
+            right: 1rem;
+            top: 5rem;
+            width: 16rem;
+            z-index: 40;
+        }
+
+        /* Add padding to main container to prevent overlap */
+        .container {
+            padding-right: 18rem !important;
+            /* 16rem for sidebar + 2rem for spacing */
+        }
+
+        .vocabulary-container {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 6rem);
+        }
+
+        .vocabulary-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vocabulary-content {
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .vocabulary-input {
+            flex: 1;
+        }
+
+        .vocabulary-output {
+            flex: 1;
+        }
+
+        .vocabulary-textarea {
+            resize: none;
+            width: 100%;
+            font-size: 0.875rem;
+            min-height: 100px;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            transition: border-color 0.2s;
+        }
+
+        .vocabulary-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .vocabulary-pronunciation {
+            font-family: 'Arial', sans-serif;
+            color: #4b5563;
+            font-style: italic;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 
@@ -184,7 +261,7 @@
             <div class="">
                 <ul class="menu menu-horizontal px-1 mx-auto flex gap-4">
                     <li><a href="giao-tiep.html" class="active">Giao Tiếp</a></li>
-                    <li><a href="tu-vung.html">Từ Vựng</a></li>
+                    <!-- <li><a href="tu-vung.html">Từ Vựng</a></li> -->
                 </ul>
             </div>
             <div class="dropdown dropdown-end">
@@ -266,13 +343,63 @@
         </div>
     </div>
 
-    <!-- Translate Button -->
-    <div id="translateButton" class="translate-button">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-        </svg>
-        Dịch
+    <!-- Vocabulary Sidebar -->
+    <div class="vocabulary-sidebar">
+        <div class="vocabulary-container">
+            <div class="vocabulary-header">
+                <h3 class="font-semibold">Từ Vựng</h3>
+                <div class="flex gap-2">
+                    <button id="switchLanguage" class="btn btn-ghost btn-sm" title="Đổi ngôn ngữ">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="vocabulary-content">
+                <!-- Input -->
+                <div class="vocabulary-input">
+                    <div class="flex justify-between items-center mb-2">
+                        <div id="sourceLabel" class="text-sm font-medium text-gray-500">Tiếng Việt</div>
+                        <button id="speakSourceBtn" class="btn btn-ghost btn-sm" title="Phát âm">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
+                                fill="currentColor" class="h-5 w-5">
+                                <path
+                                    d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <textarea id="sourceText" class="vocabulary-textarea"
+                        placeholder="Nhập văn bản cần dịch..."></textarea>
+                    <button id="translateBtn" class="btn btn-primary btn-sm w-full mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        Dịch
+                    </button>
+                </div>
+
+                <!-- Translation -->
+                <div class="vocabulary-output">
+                    <div class="flex justify-between items-center mb-2">
+                        <div id="targetLabel" class="text-sm font-medium text-gray-500">Tiếng Anh</div>
+                        <button id="speakTargetBtn" class="btn btn-ghost btn-sm" title="Phát âm">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
+                                fill="currentColor" class="h-5 w-5">
+                                <path
+                                    d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="targetText" class="vocabulary-textarea bg-base-200"></div>
+                    <div id="pronunciation" class="vocabulary-pronunciation"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1089,7 +1216,7 @@
                 // Refresh session list nhưng không reset currentSessionId
                 await fetchChatHistory();
 
-                
+
                 statusMessage.textContent = '';
             } catch (error) {
                 console.error('Lỗi khi gửi tin nhắn:', error);
@@ -1114,6 +1241,82 @@
                     addUserMessage(text);
                     sendMessage(text);
                 }
+            }
+        });
+
+        // Add these functions for vocabulary translation
+        let isVietnameseToEnglish = true;
+
+        document.getElementById('switchLanguage').addEventListener('click', () => {
+            isVietnameseToEnglish = !isVietnameseToEnglish;
+            const sourceLabel = document.getElementById('sourceLabel');
+            const targetLabel = document.getElementById('targetLabel');
+            const sourceText = document.getElementById('sourceText');
+            const targetText = document.getElementById('targetText');
+
+            // Swap labels
+            [sourceLabel.textContent, targetLabel.textContent] = [targetLabel.textContent, sourceLabel.textContent];
+
+            // Swap text content
+            const tempText = sourceText.value;
+            sourceText.value = targetText.textContent;
+            targetText.textContent = tempText;
+
+            // Clear pronunciation
+            document.getElementById('pronunciation').textContent = '';
+        });
+
+        document.getElementById('translateBtn').addEventListener('click', async () => {
+            const sourceText = document.getElementById('sourceText').value.trim();
+            if (!sourceText) return;
+
+            const targetText = document.getElementById('targetText');
+            const pronunciation = document.getElementById('pronunciation');
+
+            try {
+                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: sourceText,
+                        direction: isVietnameseToEnglish ? 'vi_to_en' : 'en_to_vi'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Translation failed');
+                }
+
+                const data = await response.json();
+                targetText.textContent = data.translated_text;
+
+                // Show pronunciation only for English words
+                if (isVietnameseToEnglish && data.ipa) {
+                    pronunciation.textContent = data.ipa;
+                } else {
+                    pronunciation.textContent = '';
+                }
+            } catch (error) {
+                console.error('Translation error:', error);
+                targetText.textContent = 'Có lỗi xảy ra khi dịch. Vui lòng thử lại.';
+                pronunciation.textContent = '';
+            }
+        });
+
+        // Add text-to-speech functionality
+        document.getElementById('speakSourceBtn').addEventListener('click', () => {
+            const text = document.getElementById('sourceText').value.trim();
+            if (text) {
+                playTextToSpeech(text, null);
+            }
+        });
+
+        document.getElementById('speakTargetBtn').addEventListener('click', () => {
+            const text = document.getElementById('targetText').textContent.trim();
+            if (text) {
+                playTextToSpeech(text, null);
             }
         });
     </script>

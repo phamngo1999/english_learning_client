@@ -173,18 +173,13 @@
 
         /* Add styles for vocabulary sidebar */
         .vocabulary-sidebar {
-            position: fixed;
             right: 1rem;
             top: 5rem;
             width: 16rem;
             z-index: 40;
         }
 
-        /* Add padding to main container to prevent overlap */
-        .container {
-            padding-right: 18rem !important;
-            /* 16rem for sidebar + 2rem for spacing */
-        }
+
 
         .vocabulary-container {
             background-color: white;
@@ -192,7 +187,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 6rem);
+            height: 100%;
         }
 
         .vocabulary-header {
@@ -205,7 +200,6 @@
 
         .vocabulary-content {
             padding: 1rem;
-            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -238,15 +232,7 @@
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
         }
 
-        .vocabulary-pronunciation {
-            font-family: 'Arial', sans-serif;
-            color: #4b5563;
-            font-style: italic;
-            padding: 0.5rem;
-            background-color: #f3f4f6;
-            border-radius: 0.25rem;
-            margin-top: 0.5rem;
-        }
+        .vocabulary-pronunciation {}
     </style>
 </head>
 
@@ -327,80 +313,75 @@
 
                     <!-- Recording Button -->
                     <div class="flex justify-center items-center mt-4">
-                        <button id="recordButton" class="btn btn-circle btn-lg btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        <button id="recordButton" class="btn btn-circle btn-lg btn-primary recording">
+                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg>
+                            </svg> -->
+                            🤖
                         </button>
                     </div>
 
                     <!-- Status Message -->
-                    <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500"></div>
+                    <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500">Hãy nói để bắt đầu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Sidebar -->
+        <div class="vocabulary-sidebar">
+            <div class="vocabulary-container">
+                <div class="vocabulary-header">
+                    <h3 class="font-semibold">Từ Vựng</h3>
+                    <div class="flex gap-2">
+                        <button id="switchLanguage" class="btn btn-ghost btn-sm" title="Đổi ngôn ngữ">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="vocabulary-content">
+                    <!-- Input -->
+                    <div class="vocabulary-input">
+                        <div class="flex justify-between items-center mb-2">
+                            <div id="sourceLabel" class="text-sm font-medium text-gray-500">Tiếng Việt</div>
+                            <button id="speakSourceBtn" class="btn btn-ghost btn-sm" title="Phát âm">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
+                                    fill="currentColor" class="h-5 w-5">
+                                    <path
+                                        d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <textarea id="sourceText" class="vocabulary-textarea"
+                            placeholder="Nhập văn bản cần dịch..."></textarea>
+                    </div>
+
+                    <!-- Translation -->
+                    <div class="vocabulary-output">
+                        <div class="flex justify-between items-center mb-2">
+                            <div id="targetLabel" class="text-sm font-medium text-gray-500">Tiếng Anh</div>
+                            <button id="speakTargetBtn" class="btn btn-ghost btn-sm" title="Phát âm">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
+                                    fill="currentColor" class="h-5 w-5">
+                                    <path
+                                        d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="targetText" class="vocabulary-textarea bg-base-200"></div>
+                        <div id="pronunciation" class="vocabulary-pronunciation"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Vocabulary Sidebar -->
-    <div class="vocabulary-sidebar">
-        <div class="vocabulary-container">
-            <div class="vocabulary-header">
-                <h3 class="font-semibold">Từ Vựng</h3>
-                <div class="flex gap-2">
-                    <button id="switchLanguage" class="btn btn-ghost btn-sm" title="Đổi ngôn ngữ">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="vocabulary-content">
-                <!-- Input -->
-                <div class="vocabulary-input">
-                    <div class="flex justify-between items-center mb-2">
-                        <div id="sourceLabel" class="text-sm font-medium text-gray-500">Tiếng Việt</div>
-                        <button id="speakSourceBtn" class="btn btn-ghost btn-sm" title="Phát âm">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
-                                fill="currentColor" class="h-5 w-5">
-                                <path
-                                    d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
-                            </svg>
-                        </button>
-                    </div>
-                    <textarea id="sourceText" class="vocabulary-textarea"
-                        placeholder="Nhập văn bản cần dịch..."></textarea>
-                    <button id="translateBtn" class="btn btn-primary btn-sm w-full mt-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                        </svg>
-                        Dịch
-                    </button>
-                </div>
 
-                <!-- Translation -->
-                <div class="vocabulary-output">
-                    <div class="flex justify-between items-center mb-2">
-                        <div id="targetLabel" class="text-sm font-medium text-gray-500">Tiếng Anh</div>
-                        <button id="speakTargetBtn" class="btn btn-ghost btn-sm" title="Phát âm">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"
-                                fill="currentColor" class="h-5 w-5">
-                                <path
-                                    d="M3 10v4h4l5 5V5l-5 5H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zm2.5 0c0 2.53-1.61 4.71-4 5.43v2.07c3.31-.86 5.5-3.85 5.5-7.5s-2.19-6.64-5.5-7.5v2.07c2.39.72 4 2.9 4 5.43z" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="targetText" class="vocabulary-textarea bg-base-200"></div>
-                    <div id="pronunciation" class="vocabulary-pronunciation"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Add this at the beginning of the script section
@@ -819,16 +800,77 @@
             localStorage.setItem('currentSessionId', sessionId);
         }
 
+
+        // Audio
+        let stream;
+        let analyserIntervalId;
+        var silenceStart = null;
+        var isFirstRecording = true;
+        var recordingStarted = false;
+        // Tăng lên nếu bị ồn
+        var silenceThreshold = 0.1;
+        var maxSilenceDuration = 5000;
+        var checkInterval = 100;
+        function getVolume() {
+            analyser.getByteTimeDomainData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                let value = (dataArray[i] - 128) / 128;
+                sum += value * value;
+            }
+            // console.log("Volume data:", Math.sqrt(sum / dataArray.length));
+            return Math.sqrt(sum / dataArray.length);
+        }
+
+        async function startAnalyser() {
+            stream= await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            sourceNode = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            dataArray = new Uint8Array(analyser.fftSize);
+            sourceNode.connect(analyser);
+
+            analyserIntervalId = setInterval(() => {
+                const volume = getVolume();
+
+                if (volume > silenceThreshold && !isRecording) {
+                    console.log("🎙️ Phát hiện âm thanh");
+                    isFirstRecording = false;
+                    startRecord();
+                    silenceStart = null;
+                } else {
+                    if(isFirstRecording){
+                        return;
+                    }
+                    if (!silenceStart) {
+                        silenceStart = Date.now();
+                    } else if (Date.now() - silenceStart > maxSilenceDuration) {
+                        console.log("🛑 Yên lặng quá 3s - dừng ghi");
+                        isFirstRecording = true;
+                        stopRecording();
+                        stopAnalyser();
+                    }
+                }
+            }, checkInterval);
+        }
+
+        startAnalyser();
+
+        function stopAnalyser() {
+            if (analyserIntervalId) clearInterval(analyserIntervalId);
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
         // Yêu cầu quyền truy cập microphone
         async function setupRecording() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
 
                 // Xử lý khi stream bị ngắt
                 stream.getAudioTracks().forEach(track => {
@@ -857,7 +899,6 @@
                         }
 
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-
                         // Kiểm tra kích thước audio
                         if (audioBlob.size < MIN_AUDIO_SIZE) {
                             throw new Error('Âm thanh quá ngắn');
@@ -889,6 +930,7 @@
                         messageInput.value = data.transcript;
                         inputContainer.classList.remove('hidden');
                         messageInput.focus();
+                        statusMessage.textContent = 'Hãy nói để bắt đầu';
 
                         // Start auto-send timer only if user hasn't interacted
                         if (!hasUserInteracted) {
@@ -931,7 +973,7 @@
         }
 
         // Xử lý sự kiện click nút ghi âm
-        recordButton.addEventListener('click', async () => {
+        async function startRecord(){
             try {
                 if (!mediaRecorder) {
                     const success = await setupRecording();
@@ -962,7 +1004,7 @@
                 isRecording = false;
                 recordButton.classList.remove('recording');
             }
-        });
+        };
 
         // Xử lý sự kiện chọn text
         document.addEventListener('mouseup', (e) => {
@@ -1006,7 +1048,7 @@
                     currentAudio.currentTime = 0;
                 }
 
-                statusMessage.textContent = 'Đang chuyển đổi văn bản thành âm thanh...';
+                // statusMessage.textContent = 'Đang chuyển đổi văn bản thành âm thanh...';
                 const response = await fetch(`${CONFIG.SERVER_DOMAIN}/speak`, {
                     method: 'POST',
                     headers: {
@@ -1039,14 +1081,17 @@
                 // Xóa URL khi audio kết thúc
                 currentAudio.onended = () => {
                     URL.revokeObjectURL(audioUrl);
-                    statusMessage.textContent = '';
+                    statusMessage.textContent = 'Hãy nói để bắt đầu';
                     if (speakerButton) {
                         speakerButton.classList.remove('playing');
                     }
+
+                    // Kết thúc thì tiếp tục lắng nghe phân tích 
+                    startAnalyser();
                 };
 
                 currentAudio.play();
-                statusMessage.textContent = '';
+                statusMessage.textContent = 'Hãy nói để bắt đầu';
             } catch (error) {
                 console.error('Lỗi khi phát âm thanh:', error);
                 statusMessage.textContent = 'Có lỗi xảy ra khi phát âm thanh. Vui lòng thử lại.';
@@ -1217,7 +1262,7 @@
                 await fetchChatHistory();
 
 
-                statusMessage.textContent = '';
+                // statusMessage.textContent = '';
             } catch (error) {
                 console.error('Lỗi khi gửi tin nhắn:', error);
                 statusMessage.textContent = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.';
@@ -1244,67 +1289,6 @@
             }
         });
 
-        // Add these functions for vocabulary translation
-        let isVietnameseToEnglish = true;
-
-        document.getElementById('switchLanguage').addEventListener('click', () => {
-            isVietnameseToEnglish = !isVietnameseToEnglish;
-            const sourceLabel = document.getElementById('sourceLabel');
-            const targetLabel = document.getElementById('targetLabel');
-            const sourceText = document.getElementById('sourceText');
-            const targetText = document.getElementById('targetText');
-
-            // Swap labels
-            [sourceLabel.textContent, targetLabel.textContent] = [targetLabel.textContent, sourceLabel.textContent];
-
-            // Swap text content
-            const tempText = sourceText.value;
-            sourceText.value = targetText.textContent;
-            targetText.textContent = tempText;
-
-            // Clear pronunciation
-            document.getElementById('pronunciation').textContent = '';
-        });
-
-        document.getElementById('translateBtn').addEventListener('click', async () => {
-            const sourceText = document.getElementById('sourceText').value.trim();
-            if (!sourceText) return;
-
-            const targetText = document.getElementById('targetText');
-            const pronunciation = document.getElementById('pronunciation');
-
-            try {
-                const response = await fetch(`${CONFIG.SERVER_DOMAIN}/translate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        text: sourceText,
-                        direction: isVietnameseToEnglish ? 'vi_to_en' : 'en_to_vi'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Translation failed');
-                }
-
-                const data = await response.json();
-                targetText.textContent = data.translated_text;
-
-                // Show pronunciation only for English words
-                if (isVietnameseToEnglish && data.ipa) {
-                    pronunciation.textContent = data.ipa;
-                } else {
-                    pronunciation.textContent = '';
-                }
-            } catch (error) {
-                console.error('Translation error:', error);
-                targetText.textContent = 'Có lỗi xảy ra khi dịch. Vui lòng thử lại.';
-                pronunciation.textContent = '';
-            }
-        });
-
         // Add text-to-speech functionality
         document.getElementById('speakSourceBtn').addEventListener('click', () => {
             const text = document.getElementById('sourceText').value.trim();
@@ -1320,6 +1304,7 @@
             }
         });
     </script>
+    <script src="translate.js"></script>
 </body>
 
 </html>

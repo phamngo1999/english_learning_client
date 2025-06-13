@@ -246,7 +246,7 @@
         <div class="gap-2">
             <div class="">
                 <ul class="menu menu-horizontal px-1 mx-auto flex gap-4">
-                    <li><a href="giao-tiep.html" class="active">Giao Tiếp</a></li>
+                    <!-- <li><a href="giao-tiep.html" class="active">Giao Tiếp</a></li> -->
                     <!-- <li><a href="tu-vung.html">Từ Vựng</a></li> -->
                 </ul>
             </div>
@@ -287,7 +287,13 @@
         <div class="main-content">
             <div class="card bg-base-100 shadow-xl h-full">
                 <div class="card-body">
-                    <h2 class="card-title text-center mb-4">Luyện Giao Tiếp Tiếng Anh</h2>
+                    <h2 class="card-title text-center mb-4 flex justify-between items-center">
+                        <div>Luyện Giao Tiếp Tiếng Anh</div>
+                        <label class="label">
+                            <div>Chế độ tự động</div>
+                            <input id="autoMode" type="checkbox" class="toggle toggle-primary ml-2" />
+                        </label>
+                    </h2>
 
                     <!-- Chat Messages -->
                     <div class="chat-container">
@@ -313,18 +319,17 @@
 
                     <!-- Recording Button -->
                     <div class="flex justify-center items-center mt-4">
-                        <button id="recordButton" class="btn btn-circle btn-lg btn-primary recording">
-                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        <button id="recordButton" class="btn btn-circle btn-lg btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg> -->
-                            🤖
+                            </svg>
                         </button>
                     </div>
 
                     <!-- Status Message -->
-                    <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500">Hãy nói để bắt đầu</div>
+                    <div id="statusMessage" class="text-center mt-2 text-sm text-gray-500"></div>
                 </div>
             </div>
         </div>
@@ -823,9 +828,12 @@
         }
 
         async function startAnalyser() {
-            stream= await navigator.mediaDevices.getUserMedia({
-                audio: true
-            });
+            if(!stream) {
+                // Nếu đã có stream, không cần yêu cầu lại
+                stream= await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+            }
 
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             sourceNode = audioContext.createMediaStreamSource(stream);
@@ -858,7 +866,6 @@
             }, checkInterval);
         }
 
-        startAnalyser();
 
         function stopAnalyser() {
             if (analyserIntervalId) clearInterval(analyserIntervalId);
@@ -871,7 +878,13 @@
         // Yêu cầu quyền truy cập microphone
         async function setupRecording() {
             try {
-
+                
+                if(!stream) {
+                    // Nếu đã có stream, không cần yêu cầu lại
+                    stream= await navigator.mediaDevices.getUserMedia({
+                        audio: true
+                    });
+                }
                 // Xử lý khi stream bị ngắt
                 stream.getAudioTracks().forEach(track => {
                     track.onended = () => {
@@ -930,7 +943,7 @@
                         messageInput.value = data.transcript;
                         inputContainer.classList.remove('hidden');
                         messageInput.focus();
-                        statusMessage.textContent = 'Hãy nói để bắt đầu';
+                        statusMessage.textContent = '';
 
                         // Start auto-send timer only if user hasn't interacted
                         if (!hasUserInteracted) {
@@ -1081,17 +1094,19 @@
                 // Xóa URL khi audio kết thúc
                 currentAudio.onended = () => {
                     URL.revokeObjectURL(audioUrl);
-                    statusMessage.textContent = 'Hãy nói để bắt đầu';
+                    statusMessage.textContent = '';
                     if (speakerButton) {
                         speakerButton.classList.remove('playing');
                     }
 
                     // Kết thúc thì tiếp tục lắng nghe phân tích 
-                    startAnalyser();
+                    if (isAutoMode) {
+                        startAnalyser();
+                    }
                 };
 
                 currentAudio.play();
-                statusMessage.textContent = 'Hãy nói để bắt đầu';
+                statusMessage.textContent = '';
             } catch (error) {
                 console.error('Lỗi khi phát âm thanh:', error);
                 statusMessage.textContent = 'Có lỗi xảy ra khi phát âm thanh. Vui lòng thử lại.';
@@ -1303,6 +1318,45 @@
                 playTextToSpeech(text, null);
             }
         });
+
+        let isAutoMode = false;
+        document.getElementById('autoMode').addEventListener('change', (e) => {
+            debugger
+            if (e.target.checked) {
+                isAutoMode = true;
+                recordButton.innerHTML = '🤖'
+                startAnalyser();
+                recordButton.classList.add('recording');
+                recordButton.removeEventListener('click', () => {
+                    if (isRecording) {
+                        stopRecording();
+                    } else {
+                        startRecord();
+                    }
+                });
+            } else {
+                isAutoMode = false;
+                recordButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>`
+                stopAnalyser();
+                recordButton.addEventListener('click', () => {
+                    if (isRecording) {
+                        stopRecording();
+                    } else {
+                        startRecord();
+                    }
+                }); 
+            }
+        });
+
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecord();
+            }
+        }); 
     </script>
     <script src="translate.js"></script>
 </body>

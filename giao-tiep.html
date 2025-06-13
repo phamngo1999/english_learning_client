@@ -469,7 +469,7 @@
 
         // Function to format date
         function formatDate(dateString) {
-            const date = new Date(dateString.slice(0, 23)+ "Z");
+            const date = new Date(dateString.slice(0, 23) + "Z");
             return date.toLocaleString('vi-VN', {
                 timeZone: "Asia/Ho_Chi_Minh",
                 day: '2-digit',
@@ -812,7 +812,7 @@
         var isFirstRecording = true;
         var recordingStarted = false;
         // Tăng lên nếu bị ồn
-        var silenceThreshold = 0.1;
+        var silenceThreshold = 0.05;
         var maxSilenceDuration = 5000;
         var checkInterval = 100;
         function getVolume() {
@@ -827,9 +827,9 @@
         }
 
         async function startAnalyser() {
-            if(!stream) {
+            if (!stream) {
                 // Nếu đã có stream, không cần yêu cầu lại
-                stream= await navigator.mediaDevices.getUserMedia({
+                stream = await navigator.mediaDevices.getUserMedia({
                     audio: true
                 });
             }
@@ -843,20 +843,29 @@
 
             analyserIntervalId = setInterval(() => {
                 const volume = getVolume();
+                //     if (volume > silenceThreshold && !isRecording) {
+                //     console.log("🎙️ Phát hiện âm thanh");
+                //     isFirstRecording = false;
+                //     startRecord();
+                //     silenceStart = null;
+                // }
 
-                if (volume > silenceThreshold && !isRecording) {
-                    console.log("🎙️ Phát hiện âm thanh");
-                    isFirstRecording = false;
-                    startRecord();
+                if (volume > silenceThreshold) {
+                    // Nếu phát hiện âm thanh, reset thời gian im lặng
                     silenceStart = null;
+                    if (!isRecording) {
+                        console.log("🎙️ Phát hiện âm thanh");
+                        isFirstRecording = false;
+                        startRecord();
+                    }
                 } else {
-                    if(isFirstRecording){
+                    if (isFirstRecording) {
                         return;
                     }
                     if (!silenceStart) {
                         silenceStart = Date.now();
                     } else if (Date.now() - silenceStart > maxSilenceDuration) {
-                        console.log("🛑 Yên lặng quá 3s - dừng ghi");
+                        console.log("🛑 Yên lặng quá 5s - dừng ghi");
                         isFirstRecording = true;
                         stopRecording();
                         stopAnalyser();
@@ -877,10 +886,10 @@
         // Yêu cầu quyền truy cập microphone
         async function setupRecording() {
             try {
-                
-                if(!stream) {
+
+                if (!stream) {
                     // Nếu đã có stream, không cần yêu cầu lại
-                    stream= await navigator.mediaDevices.getUserMedia({
+                    stream = await navigator.mediaDevices.getUserMedia({
                         audio: true
                     });
                 }
@@ -985,7 +994,7 @@
         }
 
         // Xử lý sự kiện click nút ghi âm
-        async function startRecord(){
+        async function startRecord() {
             try {
                 if (!mediaRecorder) {
                     const success = await setupRecording();
@@ -1336,7 +1345,7 @@
         });
 
         recordButton.addEventListener('click', () => {
-            if( isAutoMode) {
+            if (isAutoMode) {
                 // Nếu đang ở chế độ tự động, không cần xử lý click
                 return;
             }
